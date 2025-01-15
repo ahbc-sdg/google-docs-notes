@@ -3,3 +3,8 @@
 I write notes in google docs and I would like to
 convert it to some other way of exporing it as a data structure.
 
+**** this branch is written in clojure
+
+My goal is to learn clojure while writing this library.
+
+To practice
