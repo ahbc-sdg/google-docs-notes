@@ -27,10 +27,31 @@
        (assoc acc k v)))
    {}
    input-map))
+(defn process-entries [entries index acc]
+  (reduce
+   (fn [acc entry]
+     (let [parent       (first entry)
+           children     (rest entry)
+           new-index    (count acc)
+           parent-entry
+           {:index        new-index
+            :value        parent
+            :parent-index index}]
+       (conj acc parent-entry)
+       (if children
+         (conj acc (process-entries children new-index acc)))))
+   acc entries))
+
+(def test-entry [["Waiting for Kellan to drop the files"]
+  ["Working on getting the dag (prod)  working with the expected number of files"
+   ["simple_gcs can only handle ~50 files before failing"]]
+  ["Unclear about whether to combine historical (weekly) and current (daily) or leave them separately for another team to worry about it"
+   ["To union them, current would need to be transformed to weekly to match historical"
+    ["Need to review the dbt models; this might be already done"]]]])
 
 (defn reshape-data [input-map]
   (letfn
-      [(process-entry [date-key entries parent-index category acc]
+      [(process [date-key entries parent-index category acc]
          (reduce
           (fn [acc entry]
             (let [parent (first entry)
