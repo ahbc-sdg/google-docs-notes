@@ -27,52 +27,28 @@
        (assoc acc k v)))
    {}
    input-map))
-(defn process-entries [entries index acc]
+
+(defn process [entries index acc]
+  "flatten the ENTRIES trees, inc index with INDEX, reduce ACC"
   (reduce
    (fn [acc entry]
-     (let [parent       (first entry)
-           children     (rest entry)
-           new-index    (count acc)
-           parent-entry
-           {:index        new-index
-            :value        parent
-            :parent-index index}]
-       (conj acc parent-entry)
-       (if children
-         (conj acc (process-entries children new-index acc)))))
+     (let [parent     {:value (first entry) :index index}
+           children   (rest entry)
+           flat-entry {:index        (count acc)
+                       :value        (:value parent)
+                       :parent-index (:index parent)}]
+
+       (if (empty? children)
+         (conj acc flat-entry)
+         (process children (count acc) (conj acc flat-entry)))))
    acc entries))
 
-(def test-entry [["Waiting for Kellan to drop the files"]
-  ["Working on getting the dag (prod)  working with the expected number of files"
-   ["simple_gcs can only handle ~50 files before failing"]]
-  ["Unclear about whether to combine historical (weekly) and current (daily) or leave them separately for another team to worry about it"
-   ["To union them, current would need to be transformed to weekly to match historical"
-    ["Need to review the dbt models; this might be already done"]]]])
-
 (defn reshape-data [input-map]
-  (letfn
-      [(process [date-key entries parent-index category acc]
-         (reduce
-          (fn [acc entry]
-            (let [parent (first entry)
-                  children (rest entry)
-                  new-index (count acc)]
-              (let [parent-entry
-                    {:index         new-index
-                     :value         parent
-                     :parent-index  parent-index
-                     :date          date-key
-                     :category      category}]
-
-                (let [updated-acc (conj acc parent-entry)]
-                  (if (seq children)
-                    (process date-key (map vector children) new-index category updated-acc)
-                    updated-acc)))))
-          acc entries))]
-    (reduce-kv
-     (fn [acc category-key category-val]
-       (reduce-kv
-        (fn [acc date-key entries]
-          (process date-key entries nil (name category-key) acc))
-        acc category-val))
-     [] input-map)))
+  (reduce-kv
+   (fn [acc category-key category-val]
+     (reduce-kv
+      (fn [acc date-key entries]
+        (map #(assoc (assoc % :category (name category-key)) :date date-key)
+             (process date-key entries nil (name category-key) acc)))
+      acc category-val))
+   [] input-map))
