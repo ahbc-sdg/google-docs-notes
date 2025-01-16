@@ -29,6 +29,8 @@
        (assoc acc k v)))
    {}
    input-map))
+(defn update-map-entries[m e]
+     (reduce-kv (fn [r k v] (assoc  r k v))  m e))
 
 (defn process [entries index acc]
   "flatten the ENTRIES trees, inc index with INDEX, reduce ACC"
@@ -46,13 +48,16 @@
    acc entries))
 
 (defn reshape-data [input-map]
-  (letfn [(boilerplate [category date entries]
-            (map #(assoc %1 :date date) entries))]
+  (letfn [(update-map-entries [m e]
+            (reduce-kv (fn [r k v] (assoc  r k v))  m e))]
     (reduce-kv
      (fn [acc category-key category-val]
        (reduce-kv
         (fn [acc date-key entries]
-          (boilerplate
-           (name category-key) (parse-date-keyword date-key) (process entries nil [])))
+          (map
+           #(update-map-entries %
+                                {:category (name category-key)
+                                 :date     (parse-date-keyword date-key)}
+                                ) (process entries nil [])))
         acc category-val))
      [] input-map)))
