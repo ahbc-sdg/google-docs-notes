@@ -73,6 +73,6 @@
      (fn [acc category-key category-val]
        (reduce-kv
         (fn [acc date-key entries]
-          (process-entry date-key entries nil (name category-key) acc))
+          (process date-key entries nil (name category-key) acc))
         acc category-val))
      [] input-map)))
