@@ -66,7 +66,7 @@
 
                 (let [updated-acc (conj acc parent-entry)]
                   (if (seq children)
-                    (process-entry date-key (map vector children) new-index category updated-acc)
+                    (process date-key (map vector children) new-index category updated-acc)
                     updated-acc)))))
           acc entries))]
     (reduce-kv
