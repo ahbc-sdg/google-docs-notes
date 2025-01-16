@@ -7,16 +7,18 @@
   (let [json-string (slurp (io/file filename))]
     (json/read-str json-string :key-fn keyword)))
 
-(defn parse-date-keyword [keyword]
-  (let [date-str (name keyword)
-        date (jt/local-date "MMM d, yyyy" date-str)]
-    (jt/format :iso-date date)))
-
 (defn valid-date-keyword? [keyword]
   (try
     (jt/local-date "MMM d, yyyy" (name keyword))
     true
     (catch Exception _ false)))
+
+(defn parse-date-keyword [keyword]
+  (if (valid-date-keyword? keyword)
+      (let [date-str (name keyword)
+        date (jt/local-date "MMM d, yyyy" date-str)]
+        (jt/format :iso-date date))
+      keyword))
 
 (defn replace-date-keys [input-map]
   (reduce-kv
@@ -44,11 +46,13 @@
    acc entries))
 
 (defn reshape-data [input-map]
-  (reduce-kv
-   (fn [acc category-key category-val]
-     (reduce-kv
-      (fn [acc date-key entries]
-        (assoc acc (map #(assoc (assoc % :category (name category-key)) :date date-key)
-             (process entries nil acc))))
-      acc category-val))
-   [] input-map))
+  (letfn [(boilerplate [category date entries]
+            (map #(assoc %1 :date date) entries))]
+    (reduce-kv
+     (fn [acc category-key category-val]
+       (reduce-kv
+        (fn [acc date-key entries]
+          (boilerplate
+           (name category-key) (parse-date-keyword date-key) (process entries nil [])))
+        acc category-val))
+     [] input-map)))
