@@ -48,7 +48,7 @@
    (fn [acc category-key category-val]
      (reduce-kv
       (fn [acc date-key entries]
-        (map #(assoc (assoc % :category (name category-key)) :date date-key)
-             (process entries nil acc)))
+        (assoc acc (map #(assoc (assoc % :category (name category-key)) :date date-key)
+             (process entries nil acc))))
       acc category-val))
    [] input-map))
