@@ -46,18 +46,17 @@
          (conj acc flat-entry)
          (process children (count acc) (conj acc flat-entry)))))
    acc entries))
-
+(defn update-map-entries [m e]
+  (reduce-kv (fn [r k v] (assoc  r k v))  m e))
 (defn reshape-data [input-map]
-  (letfn [(update-map-entries [m e]
-            (reduce-kv (fn [r k v] (assoc  r k v))  m e))]
-    (reduce-kv
-     (fn [acc category-key category-val]
-       (reduce-kv
-        (fn [acc date-key entries]
-          (map
-           #(update-map-entries %
-                                {:category (name category-key)
-                                 :date     (parse-date-keyword date-key)}
-                                ) (process entries nil [])))
-        acc category-val))
-     [] input-map)))
+  (reduce-kv
+   (fn [acc category-key category-val]
+     (reduce-kv
+      (fn [acc date-key entries]
+        (map
+         #(update-map-entries %
+                              {:category (name category-key)
+                               :date     (parse-date-keyword date-key)})
+         (process entries nil [])))
+      ) acc category-val)
+   [] input-map))
