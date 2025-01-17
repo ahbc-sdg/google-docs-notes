@@ -32,7 +32,7 @@
 (defn update-map-entries[m e]
      (reduce-kv (fn [r k v] (assoc  r k v))  m e))
 
-(defn process [entries index acc]
+(defn process [entries index acc category date]
   "flatten the ENTRIES trees, inc index with INDEX, reduce ACC"
   (reduce
    (fn [acc entry]
@@ -40,23 +40,20 @@
            children   (rest entry)
            flat-entry {:index        (count acc)
                        :value        (:value parent)
-                       :parent-index (:index parent)}]
+                       :parent-index (:index parent)
+                       :category     category
+                       :date         date}]
 
        (if (empty? children)
          (conj acc flat-entry)
-         (process children (count acc) (conj acc flat-entry)))))
+         (process children (count acc) (conj acc flat-entry) category date))))
    acc entries))
-(defn update-map-entries [m e]
-  (reduce-kv (fn [r k v] (assoc  r k v))  m e))
+
 (defn reshape-data [input-map]
   (reduce-kv
    (fn [acc category-key category-val]
      (reduce-kv
       (fn [acc date-key entries]
-        (map
-         #(update-map-entries %
-                              {:category (name category-key)
-                               :date     (parse-date-keyword date-key)})
-         (process entries nil [])))
-      ) acc category-val)
+         (process entries nil acc (name category-key) (parse-date-keyword date-key)))
+      acc category-val))
    [] input-map))
