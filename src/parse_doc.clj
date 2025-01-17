@@ -20,18 +20,6 @@
         (jt/format :iso-date date))
       keyword))
 
-(defn replace-date-keys [input-map]
-  (reduce-kv
-   (fn [acc k v]
-     (if (and (instance? clojure.lang.Keyword k)
-              (valid-date-keyword? k))
-       (assoc acc (keyword (parse-date-keyword k)) v)
-       (assoc acc k v)))
-   {}
-   input-map))
-(defn update-map-entries[m e]
-     (reduce-kv (fn [r k v] (assoc  r k v))  m e))
-
 (defn process [entries index acc category date]
   "flatten the ENTRIES trees, inc index with INDEX, reduce ACC"
   (reduce
